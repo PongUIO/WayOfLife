@@ -15,6 +15,7 @@ class Player;
 #include "tilesetmanager.h"
 #include "billboarditem.h"
 #include "../gorilla/Gorilla.h"
+#include "tile.h"
 
 
 class GameEngine
@@ -31,6 +32,7 @@ public:
 	Ogre::SceneManager* getSceneMgr() { return mSceneMgr; }
 	void setHUDSizeFactor(double factor);
 	void addBillboardItemToWorld(BillboardItem &item, Ogre::String id);
+	CellState getCellState(int x, int y, WrapMode mode = USEOFFMAP, CellState offmap = EMPTY);
 protected:
 	Gorilla::Screen *mScreen;
 	Gorilla::Layer *mLayer;
@@ -40,6 +42,9 @@ protected:
 	Ogre::ManualObject *mManObj;
 	int mXSize, mYSize;
 	Ogre::Vector3 mLookatPos;
+	std::vector<Ogre::SceneNode *> mPiecesNodes;
+	std::vector<std::vector<Tile *>> mTiles;
+	int tempCount;
 	
 	bool mInitialized;
 	double mHUDSizeFactor;
@@ -50,6 +55,7 @@ protected:
 	void updatePieces();
 	void createBillboardScreen();
 	void removeBillboardScreen();
+	void updateDataStructures();
 };
 
 #endif // GAMEENGINE_H

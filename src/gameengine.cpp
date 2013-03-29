@@ -19,7 +19,12 @@ GameEngine::GameEngine(Ogre::SceneManager *manager, Gorilla::Screen *screen)
 	mXSize = mYSize = 10;
 	mLookatPos = Ogre::Vector3(mXSize*TILESIZE/2, mYSize*TILESIZE/2, 0);
 	updateManualObject();
+	updateDataStructures();
+	mTiles[3][3]->setCellState(ALIVE);
+	mTiles[4][3]->setCellState(ALIVE);
+	mTiles[5][3]->setCellState(ALIVE);
 	updatePieces();
+	tempCount = 0;
 }
 
 void GameEngine::setHUDSizeFactor(double factor) {
@@ -67,10 +72,35 @@ void GameEngine::addBillboardItemToWorld(BillboardItem &item, Ogre::String id)
 	node->setPosition(0, 0, 4);
 }
 
+CellState GameEngine::getCellState(int x, int y, WrapMode mode, CellState offmap)
+{
+	if (x < 0 || x >= mXSize || y < 0 || y >= mYSize) {
+		return offmap;
+	}
+	return mTiles[x][y]->getCellState();
+}
+
 
 void GameEngine::tick()
 {
+	tempCount++;
+	if (tempCount > 60) {
+		tempCount-=60;
+	} else {
+		return;
+	}
 	updateHUD();
+	for (int x = 0; x < mXSize; x++) {
+		for (int y = 0; y < mYSize; y++) {
+			mTiles[x][y]->calcAliveState();
+		}
+	}
+	for (int x = 0; x < mXSize; x++) {
+		for (int y = 0; y < mYSize; y++) {
+			mTiles[x][y]->assignStoredState();
+		}
+	}
+	updatePieces();
 }
 
 
@@ -178,14 +208,38 @@ void GameEngine::updateManualObject()
 	mManObj->end();
 }
 
+void GameEngine::updateDataStructures()
+{
+	for (std::vector<std::vector<Tile *>>::iterator itr = mTiles.begin(); itr != mTiles.end(); itr++) {
+		for (uint i = 0; i < (*itr).size(); i ++) {
+			delete (*itr)[i];
+		}
+	}
+	mTiles.clear();
+	for (int x = 0; x < mXSize; x++) {
+		mTiles.push_back(std::vector<Tile *>());
+		for (int y = 0; y < mYSize; y++) {
+			mTiles[x].push_back(new Tile(this, x, y));
+		}
+	}
+}
+
 void GameEngine::updatePieces()
 {
+	for (std::vector<Ogre::SceneNode *>::iterator itr = mPiecesNodes.begin(); itr != mPiecesNodes.end(); itr++) {
+		mSceneMgr->destroySceneNode((*itr));
+	}
+	mPiecesNodes.clear();
 	for (int x = 0; x < mXSize; x++) {
 		for (int y = 0; y < mYSize; y++) {
+			if (mTiles[x][y]->getCellState() == EMPTY) {
+				continue;
+			}
 			Ogre::Entity *ent = mSceneMgr->createEntity("blob.mesh");
 			Ogre::SceneNode *node = mSceneMgr->createSceneNode();
 			node->attachObject(ent);
 			node->setPosition(x*TILESIZE, y*TILESIZE, 0);
+			mPiecesNodes.push_back(node);
 			mSceneMgr->getRootSceneNode()->addChild(node);
 		}
 	}

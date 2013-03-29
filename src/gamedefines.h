@@ -5,5 +5,6 @@
 
 enum CellState {EMPTY, ALIVE, LEFT, RIGHT, UP, DOWN, SOLID};
 enum TileType {NORMNEIGH, DIANEIGH, STRAIGHTNEIGH};
+enum WrapMode {USEOFFMAP, MIRROR, WRAP};
 
 #endif

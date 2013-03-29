@@ -11,3 +11,12 @@
 *.lai
 *.la
 *.a
+
+# Other files
+*~
+bin/WayOfLife
+OGRE*
+*.kdev4
+*.log
+*.cfg
+build/
