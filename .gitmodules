@@ -1,3 +1,7 @@
 [submodule "gorilla"]
 	path = gorilla
 	url = git://github.com/betajaen/gorilla.git
+[submodule "WayOfLifeAssets"]
+	path = WayOfLifeAssets
+	url = knuth.ping.uio.no:/ping/knuth/home0/pong/WayOfLifeAssets
+	
