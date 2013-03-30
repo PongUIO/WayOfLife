@@ -35,7 +35,7 @@ public:
 	Ogre::SceneManager* getSceneMgr() { return mSceneMgr; }
 	void setHUDSizeFactor(double factor);
 	void addBillboardItemToWorld(BillboardItem &item, Ogre::String id);
-	Tile* getCellState(int x, int y, WrapMode mode = USEOFFMAP, CellState offmap = EMPTY);
+	Tile* getTile(int x, int y, WrapMode mode = USEOFFMAP, CellState offmap = EMPTY);
 protected:
 	Gorilla::Screen *mScreen;
 	Gorilla::Layer *mLayer;

@@ -21,11 +21,15 @@ GameEngine::GameEngine(Ogre::SceneManager *manager, Gorilla::Screen *screen)
 	node->setPosition(0,0,0);
 	manager->getRootSceneNode()->addChild(node);
 	updateDataStructures();
-	mTiles[3][3]->setCellState(ALIVE);
-	mTiles[4][3]->setCellState(ALIVE);
-	mTiles[5][3]->setCellState(ALIVE);
-	mTiles[6][6]->setCellState(ALIVE);
+	//mTiles[3][3]->setCellState(ALIVE);
+	//mTiles[4][3]->setCellState(ALIVE);
+	//mTiles[5][3]->setCellState(ALIVE);
+	//mTiles[6][6]->setCellState(ALIVE);
+	mTiles[1][6]->setSpecialEffect(MOVDOWN);
+	mTiles[1][2]->setSpecialEffect(MOVUP);
 	mTiles[6][6]->setSpecialEffect(MOVUP);
+	mTiles[9][1]->setSpecialEffect(MOVLEFT);
+	mTiles[1][1]->setSpecialEffect(MOVRIGHT);
 	mTiles[7][6]->setSpecialEffect(MOVLEFT);
 	mTiles[8][6]->setSpecialEffect(MOVDOWN);
 	mTiles[9][6]->setSpecialEffect(MOVRIGHT);
@@ -85,7 +89,7 @@ void GameEngine::addBillboardItemToWorld(BillboardItem &item, Ogre::String id)
 	node->setPosition(0, 0, 0);
 }
 
-Tile *GameEngine::getCellState(int x, int y, WrapMode mode, CellState offmap)
+Tile *GameEngine::getTile(int x, int y, WrapMode mode, CellState offmap)
 {
 	if (x < 0 || x >= mXSize || y < 0 || y >= mYSize) {
 		return NULL;
@@ -103,12 +107,36 @@ void GameEngine::tick()
 	mTickNext = false;
 	for (int x = 0; x < mXSize; x++) {
 		for (int y = 0; y < mYSize; y++) {
-			mTiles[x][y]->calcAliveState();
+			if (mTiles[x][y]->getInheritedSpecialEffect() == NONE) {
+				mTiles[x][y]->calcAliveState();
+			}
+		}
+	}
+	for (int x = 0; x < mXSize; x++) {
+		for (int y = 0; y < mYSize; y++) {
+			if (mTiles[x][y]->getInheritedSpecialEffect() == NONE) {
+				mTiles[x][y]->assignStoredState();
+			}
+		}
+	}
+	for (int x = 0; x < mXSize; x++) {
+		for (int y = 0; y < mYSize; y++) {
+			if (mTiles[x][y]->getInheritedSpecialEffect() != NONE) {
+				mTiles[x][y]->setStoreState(EMPTY);
+			}
+		}
+	}
+	for (int x = 0; x < mXSize; x++) {
+		for (int y = 0; y < mYSize; y++) {
+			if (mTiles[x][y]->getInheritedSpecialEffect() != NONE) {
+				mTiles[x][y]->calcAliveState();
+			}
 		}
 	}
 	for (int x = 0; x < mXSize; x++) {
 		for (int y = 0; y < mYSize; y++) {
 			mTiles[x][y]->assignStoredState();
+			mTiles[x][y]->assignStoredEffect();
 		}
 	}
 	updatePieces();
@@ -143,23 +171,24 @@ void GameEngine::handleMouseEvent(Ogre::Vector3 vec, bool pressed, bool right, i
 		Ogre::Vector3 outPos = mLookatPos + getCamOffset() - zDiff*vec;
 		int x = outPos.x/TILESIZE;
 		int y = outPos.y/TILESIZE;
-		if (x < 0 || x >= mXSize || y < 0 || y >= mYSize || (mTiles[x][y]->getCellState() != EMPTY && !pressed)) {
+		if (x < 0 || x >= mXSize || y < 0 || y >= mYSize || (mTiles[x][y]->getState() != EMPTY && !pressed)) {
 			if (mLastX != -1) {
 				updatePieces();
 			}
 			return;
 		}
 		if (pressed) {
-			CellState state = mTiles[x][y]->getCellState();
+			CellState state = mTiles[x][y]->getState();
+			mTiles[x][y]->setInheritedSpecialEffect(NONE);
 			if (state == EMPTY) {
-				mTiles[x][y]->setCellState(ALIVE);
+				mTiles[x][y]->setState(ALIVE);
 				updatePieces();
 			} else {
-				mTiles[x][y]->setCellState(EMPTY);
+				mTiles[x][y]->setState(EMPTY);
 				placeGhostPiece(x, y);
 			}
 		} else {
-			if ((mLastX != x || mLastY != y) && mTiles[x][y]->getCellState() == EMPTY) {
+			if ((mLastX != x || mLastY != y) && mTiles[x][y]->getState() == EMPTY) {
 				placeGhostPiece(x, y);
 				mLastX = x;
 				mLastX = y;
@@ -362,7 +391,7 @@ void GameEngine::updatePieces()
 	mPiecesNodes.clear();
 	for (int x = 0; x < mXSize; x++) {
 		for (int y = 0; y < mYSize; y++) {
-			if (mTiles[x][y]->getCellState() == EMPTY) {
+			if (mTiles[x][y]->getState() == EMPTY) {
 				continue;
 			}
 			Ogre::Entity *ent = mSceneMgr->createEntity("blob.mesh");

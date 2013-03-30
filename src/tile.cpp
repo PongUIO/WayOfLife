@@ -3,28 +3,46 @@
 
 Tile::Tile(GameEngine *engine, int x, int y)
 {
+	mStoreEffectChanges = 0;
 	mEngine = engine;
 	mType = NORMNEIGH;
 	mState = mStoreState = EMPTY;
-	mEffect = mInheritedEffect = NONE;
+	mEffect = mInheritedEffect = mStoreEffect = NONE;
 	mX = x;
 	mY = y;
 }
 
 void Tile::calcAliveState()
 {
-	if (mEffect == NONE) {
-		if (mState == SOLID) {
-			return;
+	if (mState == SOLID) {
+		return;
+	}
+	if (mInheritedEffect != NONE) {
+		if (mState == ALIVE) {
+			int tx = mX - (mInheritedEffect == MOVLEFT) + (mInheritedEffect == MOVRIGHT);
+			int ty = mY - (mInheritedEffect == MOVDOWN) + (mInheritedEffect == MOVUP);
+			Tile *target = mEngine->getTile(tx, ty);
+			if (target == NULL) {
+				mStoreState = ALIVE;
+				mStoreEffect = mEffect;
+			} else {
+				if (target->getState() == EMPTY || target->getInheritedSpecialEffect() != NONE) {
+					target->setStoreState(ALIVE);
+					target->setStoreEffect(mInheritedEffect);
+				} else {
+				}
+			}
+		} else {
 		}
+	} else {
 		uint count = 0;
 		for (int x = -1; x <= 1; x++) {
 			for (int y = -1; y <= 1; y++) {
 				if ((x == 0 && y == 0) || (mType == DIANEIGH && x * y == 0) || (mType == STRAIGHTNEIGH && x*y != 0)) {
 					continue;
 				}
-				Tile *t = mEngine->getCellState(mX+x, mY+y);
-				if (t != NULL && t->getCellState() == ALIVE) {
+				Tile *t = mEngine->getTile(mX+x, mY+y);
+				if (t != NULL && t->getState() == ALIVE) {
 					count++;
 				}
 			}
@@ -34,10 +52,20 @@ void Tile::calcAliveState()
 		} else {
 			mStoreState = EMPTY;
 		}
-	} else {
-		mStoreState = mState;
 	}
 }
+
+void Tile::assignStoredEffect()
+{
+	if (mStoreEffectChanges <= 1 && mEffect == NONE) {
+		mInheritedEffect = mStoreEffect;
+	} else {
+		mInheritedEffect = mEffect;
+	}
+	mStoreEffect = mEffect;
+	mStoreEffectChanges = 0;
+}
+
 
 
 Tile::~Tile()
