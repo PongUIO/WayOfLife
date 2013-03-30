@@ -20,11 +20,19 @@ GameEngine::GameEngine(Ogre::SceneManager *manager, Gorilla::Screen *screen)
 	node->attachObject(mManObj);
 	node->setPosition(0,0,0);
 	manager->getRootSceneNode()->addChild(node);
-	updateManualObject();
 	updateDataStructures();
 	mTiles[3][3]->setCellState(ALIVE);
 	mTiles[4][3]->setCellState(ALIVE);
 	mTiles[5][3]->setCellState(ALIVE);
+	mTiles[6][6]->setSpecialEffect(MOVUP);
+	mTiles[7][6]->setSpecialEffect(MOVLEFT);
+	mTiles[8][6]->setSpecialEffect(MOVDOWN);
+	mTiles[9][6]->setSpecialEffect(MOVRIGHT);
+	mTiles[6][7]->setSpecialEffect(MOVUP);
+	mTiles[7][7]->setSpecialEffect(MOVLEFT);
+	mTiles[8][7]->setSpecialEffect(MOVDOWN);
+	mTiles[9][7]->setSpecialEffect(MOVRIGHT);
+	updateManualObject();
 	updatePieces();
 	
 	
@@ -76,12 +84,12 @@ void GameEngine::addBillboardItemToWorld(BillboardItem &item, Ogre::String id)
 	node->setPosition(0, 0, 0);
 }
 
-CellState GameEngine::getCellState(int x, int y, WrapMode mode, CellState offmap)
+Tile *GameEngine::getCellState(int x, int y, WrapMode mode, CellState offmap)
 {
 	if (x < 0 || x >= mXSize || y < 0 || y >= mYSize) {
-		return offmap;
+		return NULL;
 	}
-	return mTiles[x][y]->getCellState();
+	return mTiles[x][y];
 }
 
 
@@ -266,25 +274,61 @@ void GameEngine::updateManualObject()
 	mManObj->clear();
 	mManObj->estimateIndexCount(mXSize*mYSize*6);
 	mManObj->estimateVertexCount(mXSize*mYSize*4);
-	mManObj->begin("defaulttile");
-	uint32_t count = 0;
-	for (int x = 0; x < mXSize; x++) {
-		for (int y = 0; y < mYSize; y++) {
-			count+=4;
-			int xt = x * TILESIZE;
-			int yt = y * TILESIZE;
-			mManObj->position(xt, yt, 0);
-			mManObj->textureCoord(0,0,0);
-			mManObj->position(xt+TILESIZE, yt, 0);
-			mManObj->textureCoord(1,0,0);
-			mManObj->position(xt+TILESIZE, yt+TILESIZE, 0);
-			mManObj->textureCoord(1,1,0);
-			mManObj->position(xt, yt+TILESIZE, 0);
-			mManObj->textureCoord(0,1,0);
-			mManObj->quad(count-4, count-3, count-2, count-1);
+	uint32_t count;
+	for (int i = 0; i <= SpecialEffect::MOVLEFT; i++) {
+		if (i == 0) {
+			count = 0;
+			mManObj->begin("defaulttile");
+		} else if (i == SpecialEffect::MOVUP) {
+			count = 0;
+			mManObj->end();
+			mManObj->begin("speedtile");
+		}
+		for (int x = 0; x < mXSize; x++) {
+			for (int y = 0; y < mYSize; y++) {
+				if (mTiles[x][y]->getSpecialEffect() != i) {
+					continue;
+				}
+				count+=4;
+				int xt = x * TILESIZE;
+				int yt = y * TILESIZE;
+				mManObj->position(xt, yt, 0);
+				useTexCoord((SpecialEffect)i, 0);
+				mManObj->position(xt+TILESIZE, yt, 0);
+				useTexCoord((SpecialEffect)i, 1);
+				mManObj->position(xt+TILESIZE, yt+TILESIZE, 0);
+				useTexCoord((SpecialEffect)i, 2);
+				mManObj->position(xt, yt+TILESIZE, 0);
+				useTexCoord((SpecialEffect)i, 3);
+				mManObj->quad(count-4, count-3, count-2, count-1);
+			}
 		}
 	}
 	mManObj->end();
+}
+
+
+void GameEngine::useTexCoord(SpecialEffect dir, int c)
+{
+	if (!(dir == NONE || dir == MOVUP)) {
+		c += dir-SpecialEffect::MOVUP;
+		c%=4;
+	}
+	switch(c) {
+		case 0:
+			mManObj->textureCoord(0,1,0);
+			break;
+		case 1:
+			mManObj->textureCoord(1,1,0);
+			break;
+		case 2:
+			mManObj->textureCoord(1,0,0);
+			break;
+		case 3:
+			mManObj->textureCoord(0,0,0);
+			break;
+	}
+	
 }
 
 void GameEngine::updateDataStructures()

@@ -15,6 +15,10 @@ public:
 	CellState getCellStoreState() { return mStoreState; }
 	void setCellStoreState(CellState v) { mStoreState = v; }
 	void assignStoredState() { mState = mStoreState; }
+	SpecialEffect getSpecialEffect() { return mEffect; }
+	void setSpecialEffect(SpecialEffect v) { mEffect = v; }
+	SpecialEffect getSpecialInheritedEffect() { return mInheritedEffect; }
+	void setSpecialInheritedEffect(SpecialEffect v) { mInheritedEffect = v; }
 	TileType getTileType() { return mType; }
 	void setTileType(TileType v) { mType = v; }
 	void calcAliveState();
@@ -22,6 +26,7 @@ public:
 private:
 	CellState mState, mStoreState;
 	TileType mType;
+	SpecialEffect mEffect, mInheritedEffect;
 	int mX, mY;
 	GameEngine *mEngine;
 	

@@ -3,8 +3,9 @@
 #define WORLDSCALE 10
 #define TILESIZE 10
 
-enum CellState {EMPTY, ALIVE, LEFT, RIGHT, UP, DOWN, SOLID};
+enum CellState {EMPTY, ALIVE, UP, RIGHT, DOWN, LEFT, SOLID};
 enum TileType {NORMNEIGH, DIANEIGH, STRAIGHTNEIGH};
+enum SpecialEffect {NONE=0, MOVUP, MOVRIGHT, MOVDOWN, MOVLEFT };
 enum WrapMode {USEOFFMAP, MIRROR, WRAP};
 
 #endif

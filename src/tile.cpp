@@ -6,6 +6,7 @@ Tile::Tile(GameEngine *engine, int x, int y)
 	mEngine = engine;
 	mType = NORMNEIGH;
 	mState = mStoreState = EMPTY;
+	mEffect = NONE;
 	mX = x;
 	mY = y;
 }
@@ -18,7 +19,8 @@ void Tile::calcAliveState()
 			if ((x == 0 && y == 0) || (mType == DIANEIGH && x * y == 0) || (mType == STRAIGHTNEIGH && x*y != 0)) {
 				continue;
 			}
-			if (mEngine->getCellState(mX + x, mY + y) == ALIVE) {
+			Tile *t = mEngine->getCellState(mX+x, mY+y);
+			if (t != NULL && t->getCellState() == ALIVE) {
 				count++;
 			}
 		}
