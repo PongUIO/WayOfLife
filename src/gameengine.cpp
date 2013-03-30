@@ -6,25 +6,29 @@
 GameEngine::GameEngine(Ogre::SceneManager *manager, Gorilla::Screen *screen)
 {
 	mScreen = screen;
-	mInitialized = false;
 	mSceneMgr = manager;
+	mInitialized = mDirection = mTickNext = false;
 	mHUDSizeFactor = 1.1;
+	mLastX = mLastY = -1;
+	mTransparancy = 0.5f;
+	mXSize = mYSize = 10;
 	mOverlayMgr = Ogre::OverlayManager::getSingletonPtr();
-	
+	mLookatPos = Ogre::Vector3(mXSize*TILESIZE/2, mYSize*TILESIZE/2, 0);
 	mManObj = manager->createManualObject();
+	
 	Ogre::SceneNode *node = manager->createSceneNode("board");
 	node->attachObject(mManObj);
 	node->setPosition(0,0,0);
 	manager->getRootSceneNode()->addChild(node);
-	mXSize = mYSize = 10;
-	mLookatPos = Ogre::Vector3(mXSize*TILESIZE/2, mYSize*TILESIZE/2, 0);
 	updateManualObject();
 	updateDataStructures();
 	mTiles[3][3]->setCellState(ALIVE);
 	mTiles[4][3]->setCellState(ALIVE);
 	mTiles[5][3]->setCellState(ALIVE);
 	updatePieces();
-	tempCount = 0;
+	
+	
+	
 }
 
 void GameEngine::setHUDSizeFactor(double factor) {
@@ -69,7 +73,7 @@ void GameEngine::addBillboardItemToWorld(BillboardItem &item, Ogre::String id)
 	Ogre::SceneNode *node;
 	node = mSceneMgr->getRootSceneNode()->createChildSceneNode(id);
 	node->attachObject(set);
-	node->setPosition(0, 0, 4);
+	node->setPosition(0, 0, 0);
 }
 
 CellState GameEngine::getCellState(int x, int y, WrapMode mode, CellState offmap)
@@ -83,13 +87,11 @@ CellState GameEngine::getCellState(int x, int y, WrapMode mode, CellState offmap
 
 void GameEngine::tick()
 {
-	tempCount++;
-	if (tempCount > 60) {
-		tempCount-=60;
-	} else {
+	updateHUD();
+	if (!mTickNext) {
 		return;
 	}
-	updateHUD();
+	mTickNext = false;
 	for (int x = 0; x < mXSize; x++) {
 		for (int y = 0; y < mYSize; y++) {
 			mTiles[x][y]->calcAliveState();
@@ -104,9 +106,81 @@ void GameEngine::tick()
 }
 
 
-void GameEngine::setKeyState(OIS::KeyCode key, bool pressed) 
+void GameEngine::handleKeyEvent(OIS::KeyCode key, bool pressed) 
 {
+	if (key == OIS::KC_SPACE && pressed) {
+		mTickNext = true;
+	}
 }
+
+void GameEngine::handleMouseEvent(Ogre::Vector3 vec, bool pressed, bool right, int x, int y)
+{
+	if (right) {
+		if (mLastX != -1) {
+			updatePieces();
+		}
+		if (!pressed) {
+			mLookatPos.x += (mLastX-x)*0.2;
+			mLookatPos.y += (y-mLastY)*0.2;
+		}
+		mLastX = x;
+		mLastY = y;
+	} else {
+		Ogre::Vector3 dist =  mLookatPos + getCamOffset();
+		if (std::abs(vec.z) < 0.001) {
+			return;
+		}
+		double zDiff = dist.z/vec.z;
+		Ogre::Vector3 outPos = mLookatPos + getCamOffset() - zDiff*vec;
+		int x = outPos.x/TILESIZE;
+		int y = outPos.y/TILESIZE;
+		if (x < 0 || x >= mXSize || y < 0 || y >= mYSize || (mTiles[x][y]->getCellState() != EMPTY && !pressed)) {
+			if (mLastX != -1) {
+				updatePieces();
+			}
+			return;
+		}
+		if (pressed) {
+			CellState state = mTiles[x][y]->getCellState();
+			if (state == EMPTY) {
+				mTiles[x][y]->setCellState(ALIVE);
+				updatePieces();
+			} else {
+				mTiles[x][y]->setCellState(EMPTY);
+				placeGhostPiece(x, y);
+			}
+		} else {
+			if ((mLastX != x || mLastY != y) && mTiles[x][y]->getCellState() == EMPTY) {
+				placeGhostPiece(x, y);
+				mLastX = x;
+				mLastX = y;
+			}
+		}
+	}
+}
+
+void GameEngine::placeGhostPiece(int x, int y)
+{
+	updatePieces();
+	Ogre::Entity *ent = mSceneMgr->createEntity("blob.mesh");
+	Ogre::MaterialPtr mat = ent->getSubEntity(0)->getMaterial()->clone("blobtrans");
+	Ogre::Pass *p = mat->getTechnique(0)->getPass(0);
+	p->setSceneBlending(Ogre::SceneBlendType::SBT_TRANSPARENT_ALPHA);
+	p->setDepthWriteEnabled(false);
+	Ogre::TextureUnitState *tus = p->createTextureUnitState();
+	tus->setAlphaOperation(Ogre::LayerBlendOperationEx::LBX_SOURCE1,
+			       Ogre::LayerBlendSource::LBS_MANUAL,
+			Ogre::LayerBlendSource::LBS_CURRENT,
+			mTransparancy
+	);
+	ent->setMaterialName("blobtrans");
+	Ogre::SceneNode *node = mSceneMgr->createSceneNode();
+	node->attachObject(ent);
+	node->setPosition(x*TILESIZE, y*TILESIZE, 0);
+	mPiecesNodes.push_back(node);
+	mSceneMgr->getRootSceneNode()->addChild(node);
+}
+
 
 void GameEngine::createBillboardScreen()
 {
@@ -149,8 +223,8 @@ void GameEngine::createBillboardScreen()
 	 *		textarea->setPosition(ICONRELSIZE + ICONRELDIST, 0.0);
 	 *		element->addChild(textarea);
 	 *		mInventoryOverlay->add2D(element);
-	 }
-	 mInventoryOverlay->show();*/
+}
+mInventoryOverlay->show();*/
 	
 }
 
@@ -176,10 +250,15 @@ void GameEngine::removeBillboardScreen()
 
 void GameEngine::updateCamera(Ogre::Camera *camera)
 {
-	camera->setPosition(mLookatPos + Ogre::Vector3(0, -80, 80));
+	camera->setPosition(mLookatPos + getCamOffset());
 	camera->lookAt(mLookatPos);
 	camera->setNearClipDistance(1);
 	camera->setFarClipDistance(500);
+}
+
+Ogre::Vector3 GameEngine::getCamOffset()
+{
+	return Ogre::Vector3(0, -80, 80);
 }
 
 void GameEngine::updateManualObject()
@@ -194,14 +273,14 @@ void GameEngine::updateManualObject()
 			count+=4;
 			int xt = x * TILESIZE;
 			int yt = y * TILESIZE;
-			mManObj->textureCoord(0,0,0);
 			mManObj->position(xt, yt, 0);
-			mManObj->textureCoord(1,0,0);
+			mManObj->textureCoord(0,0,0);
 			mManObj->position(xt+TILESIZE, yt, 0);
-			mManObj->textureCoord(1,1,0);
+			mManObj->textureCoord(1,0,0);
 			mManObj->position(xt+TILESIZE, yt+TILESIZE, 0);
-			mManObj->textureCoord(0,1,0);
+			mManObj->textureCoord(1,1,0);
 			mManObj->position(xt, yt+TILESIZE, 0);
+			mManObj->textureCoord(0,1,0);
 			mManObj->quad(count-4, count-3, count-2, count-1);
 		}
 	}

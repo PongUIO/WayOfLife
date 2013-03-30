@@ -12,6 +12,7 @@ class Player;
 #include<OgreManualObject.h>
 #include<algorithm>
 #include<stdlib.h>
+#include<OgreVector3.h>
 #include "tilesetmanager.h"
 #include "billboarditem.h"
 #include "../gorilla/Gorilla.h"
@@ -26,7 +27,8 @@ public:
 	virtual ~GameEngine();
 	void tick();
 	void init();
-	void setKeyState(OIS::KeyCode, bool);
+	void handleKeyEvent(OIS::KeyCode, bool);
+	void handleMouseEvent(Ogre::Vector3 vec, bool, bool, int, int);
 	void updateCamera(Ogre::Camera *);
 	bool getInit() { return mInitialized; }
 	Ogre::SceneManager* getSceneMgr() { return mSceneMgr; }
@@ -40,15 +42,17 @@ protected:
 	Ogre::Overlay *mInventoryOverlay;
 	Ogre::OverlayManager *mOverlayMgr;
 	Ogre::ManualObject *mManObj;
-	int mXSize, mYSize;
+	int mXSize, mYSize; // Board-size
+	int mLastX, mLastY; // Used for storing the last ghost-piece location and position while dragging.
 	Ogre::Vector3 mLookatPos;
 	std::vector<Ogre::SceneNode *> mPiecesNodes;
 	std::vector<std::vector<Tile *>> mTiles;
-	int tempCount;
-	
-	bool mInitialized;
+	bool mTickNext, mInitialized, mDirection;
 	double mHUDSizeFactor;
 	TileSetManager mTileSetMgr;
+	float mTransparancy;
+	
+	Ogre::Vector3 getCamOffset();
 	void updateHUD();
 	void resizeHUD();
 	void updateManualObject();
@@ -56,6 +60,7 @@ protected:
 	void createBillboardScreen();
 	void removeBillboardScreen();
 	void updateDataStructures();
+	void placeGhostPiece(int x, int y);
 };
 
 #endif // GAMEENGINE_H

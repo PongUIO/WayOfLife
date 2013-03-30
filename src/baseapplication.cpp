@@ -43,7 +43,7 @@ bool BaseApplication::configure(void)
 	{
 		// If returned true, user clicked OK so initialise
 		// Here we choose to let the system create a default rendering window by passing 'true'
-		mWindow = mRoot->initialise(true, "BaseApplication Render Window");
+		mWindow = mRoot->initialise(true, "Way Of Life");
 
 		return true;
 	}
@@ -348,33 +348,41 @@ bool BaseApplication::keyPressed( const OIS::KeyEvent &arg )
 	{
 		mShutDown = true;
 	}
-	mEngine->setKeyState(arg.key, true);
+	mEngine->handleKeyEvent(arg.key, true);
 	return true;
 }
 
 bool BaseApplication::keyReleased( const OIS::KeyEvent &arg )
 {
-	mEngine->setKeyState(arg.key, false);
+	mEngine->handleKeyEvent(arg.key, false);
 	return true;
 }
 
 bool BaseApplication::mouseMoved( const OIS::MouseEvent &arg )
 {
 	if (mTrayMgr->injectMouseMove(arg)) return true;
+	Ogre::Ray mouseRay = mTrayMgr->getCursorRay(mCamera);
+	mEngine->handleMouseEvent(mouseRay.getDirection(), false, arg.state.buttonDown(OIS::MB_Right), arg.state.X.abs, arg.state.Y.abs);
 	return true;
 }
 
 bool BaseApplication::mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id )
 {
+	
 	if (mTrayMgr->injectMouseDown(arg, id)) return true;
+	Ogre::Ray mouseRay = mTrayMgr->getCursorRay(mCamera);
+	mEngine->handleMouseEvent(mouseRay.getDirection(), true, arg.state.buttonDown(OIS::MB_Right), arg.state.X.abs, arg.state.Y.abs);
 	return true;
 }
 
 bool BaseApplication::mouseReleased( const OIS::MouseEvent &arg, OIS::MouseButtonID id )
 {
 	if (mTrayMgr->injectMouseUp(arg, id)) return true;
+	Ogre::Ray mouseRay = mTrayMgr->getCursorRay(mCamera);
+	mEngine->handleMouseEvent(mouseRay.getDirection(), false, arg.state.buttonDown(OIS::MB_Right), arg.state.X.abs, arg.state.Y.abs);
 	return true;
 }
+
 
 //Adjust mouse clipping area
 void BaseApplication::windowResized(Ogre::RenderWindow* rw)
