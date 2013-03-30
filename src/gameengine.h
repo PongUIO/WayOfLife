@@ -13,6 +13,7 @@ class Player;
 #include<algorithm>
 #include<stdlib.h>
 #include<OgreVector3.h>
+#include <OgreResourceManager.h>
 #include "tilesetmanager.h"
 #include "billboarditem.h"
 #include "../gorilla/Gorilla.h"

@@ -24,6 +24,7 @@ GameEngine::GameEngine(Ogre::SceneManager *manager, Gorilla::Screen *screen)
 	mTiles[3][3]->setCellState(ALIVE);
 	mTiles[4][3]->setCellState(ALIVE);
 	mTiles[5][3]->setCellState(ALIVE);
+	mTiles[6][6]->setCellState(ALIVE);
 	mTiles[6][6]->setSpecialEffect(MOVUP);
 	mTiles[7][6]->setSpecialEffect(MOVLEFT);
 	mTiles[8][6]->setSpecialEffect(MOVDOWN);
@@ -171,7 +172,13 @@ void GameEngine::placeGhostPiece(int x, int y)
 {
 	updatePieces();
 	Ogre::Entity *ent = mSceneMgr->createEntity("blob.mesh");
-	Ogre::MaterialPtr mat = ent->getSubEntity(0)->getMaterial()->clone("blobtrans");
+	Ogre::MaterialPtr mat;
+	if (mTiles[x][y]->getSpecialEffect() != NONE ) {
+		mat = Ogre::MaterialManager::getSingletonPtr()->getByName("speedblob");
+		mat = mat->clone("speedblobtrans");
+	} else {
+		mat = ent->getSubEntity(0)->getMaterial()->clone("blobtrans");
+	}
 	Ogre::Pass *p = mat->getTechnique(0)->getPass(0);
 	p->setSceneBlending(Ogre::SceneBlendType::SBT_TRANSPARENT_ALPHA);
 	p->setDepthWriteEnabled(false);
@@ -181,7 +188,7 @@ void GameEngine::placeGhostPiece(int x, int y)
 			Ogre::LayerBlendSource::LBS_CURRENT,
 			mTransparancy
 	);
-	ent->setMaterialName("blobtrans");
+	ent->setMaterial(mat);
 	Ogre::SceneNode *node = mSceneMgr->createSceneNode();
 	node->attachObject(ent);
 	node->setPosition(x*TILESIZE, y*TILESIZE, 0);
@@ -359,6 +366,9 @@ void GameEngine::updatePieces()
 				continue;
 			}
 			Ogre::Entity *ent = mSceneMgr->createEntity("blob.mesh");
+			if (mTiles[x][y]->getSpecialEffect() != NONE || mTiles[x][y]->getInheritedSpecialEffect() != NONE) {
+				ent->setMaterialName("speedblob");
+			}
 			Ogre::SceneNode *node = mSceneMgr->createSceneNode();
 			node->attachObject(ent);
 			node->setPosition(x*TILESIZE, y*TILESIZE, 0);
