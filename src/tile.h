@@ -26,6 +26,8 @@ public:
 	TileType getTileType() { return mType; }
 	void setTileType(TileType v) { mType = v; }
 	void calcAliveState();
+	bool getDone() { return mDone; }
+	void setDone(bool v) { mDone = v; }
 
 private:
 	CellState mState, mStoreState;
@@ -33,6 +35,7 @@ private:
 	SpecialEffect mEffect, mInheritedEffect, mStoreEffect;
 	int mX, mY, mStoreEffectChanges;
 	GameEngine *mEngine;
+	bool mDone;
 	
 };
 

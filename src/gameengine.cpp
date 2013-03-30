@@ -21,10 +21,9 @@ GameEngine::GameEngine(Ogre::SceneManager *manager, Gorilla::Screen *screen)
 	node->setPosition(0,0,0);
 	manager->getRootSceneNode()->addChild(node);
 	updateDataStructures();
-	//mTiles[3][3]->setCellState(ALIVE);
-	//mTiles[4][3]->setCellState(ALIVE);
-	//mTiles[5][3]->setCellState(ALIVE);
-	//mTiles[6][6]->setCellState(ALIVE);
+	mTiles[0][1]->setState(ALIVE);
+	mTiles[0][0]->setState(ALIVE);
+	mTiles[1][0]->setState(ALIVE);
 	mTiles[1][6]->setSpecialEffect(MOVDOWN);
 	mTiles[1][2]->setSpecialEffect(MOVUP);
 	mTiles[6][6]->setSpecialEffect(MOVUP);
@@ -81,6 +80,7 @@ void GameEngine::addBillboardItemToWorld(BillboardItem &item, Ogre::String id)
 	set->setDefaultDimensions(WORLDSCALE, WORLDSCALE);
 	set->setMaterialName(item.getResID());
 	set->setBounds(Ogre::AxisAlignedBox::BOX_INFINITE, 0);
+
 	item.setBillboard(set->createBillboard(0, 0, 0));
 	item.getSceneName() = id;
 	Ogre::SceneNode *node;
@@ -107,28 +107,29 @@ void GameEngine::tick()
 	mTickNext = false;
 	for (int x = 0; x < mXSize; x++) {
 		for (int y = 0; y < mYSize; y++) {
-			if (mTiles[x][y]->getInheritedSpecialEffect() == NONE) {
+			if (mTiles[x][y]->getInheritedSpecialEffect() == NONE || mTiles[x][y]->getState() == EMPTY) {
 				mTiles[x][y]->calcAliveState();
+				mTiles[x][y]->setDone(true);
 			}
 		}
 	}
 	for (int x = 0; x < mXSize; x++) {
 		for (int y = 0; y < mYSize; y++) {
-			if (mTiles[x][y]->getInheritedSpecialEffect() == NONE) {
+			if (mTiles[x][y]->getDone()) {
 				mTiles[x][y]->assignStoredState();
 			}
 		}
 	}
 	for (int x = 0; x < mXSize; x++) {
 		for (int y = 0; y < mYSize; y++) {
-			if (mTiles[x][y]->getInheritedSpecialEffect() != NONE) {
+			if (!mTiles[x][y]->getDone()) {
 				mTiles[x][y]->setStoreState(EMPTY);
 			}
 		}
 	}
 	for (int x = 0; x < mXSize; x++) {
 		for (int y = 0; y < mYSize; y++) {
-			if (mTiles[x][y]->getInheritedSpecialEffect() != NONE) {
+			if (!mTiles[x][y]->getDone()) {
 				mTiles[x][y]->calcAliveState();
 			}
 		}
@@ -137,6 +138,7 @@ void GameEngine::tick()
 		for (int y = 0; y < mYSize; y++) {
 			mTiles[x][y]->assignStoredState();
 			mTiles[x][y]->assignStoredEffect();
+			mTiles[x][y]->setDone(false);
 		}
 	}
 	updatePieces();

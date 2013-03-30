@@ -10,6 +10,7 @@ Tile::Tile(GameEngine *engine, int x, int y)
 	mEffect = mInheritedEffect = mStoreEffect = NONE;
 	mX = x;
 	mY = y;
+	mDone = false;
 }
 
 void Tile::calcAliveState()
@@ -17,7 +18,7 @@ void Tile::calcAliveState()
 	if (mState == SOLID) {
 		return;
 	}
-	if (mInheritedEffect != NONE) {
+	if (mInheritedEffect != NONE && mState == ALIVE) {
 		if (mState == ALIVE) {
 			int tx = mX - (mInheritedEffect == MOVLEFT) + (mInheritedEffect == MOVRIGHT);
 			int ty = mY - (mInheritedEffect == MOVDOWN) + (mInheritedEffect == MOVUP);
