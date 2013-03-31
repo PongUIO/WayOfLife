@@ -27,6 +27,7 @@ void Tile::calcAliveState()
 				target->setStoreState(ALIVE);
 				target->setStoreEffect(mInheritedEffect);
 			} else {
+				mEngine->getEventMan().addEvent(GameEvent(SLOWDOWN, mX, mY));
 				mStoreState = ALIVE;
 				mStoreEffect = mEffect;
 			}
@@ -46,8 +47,18 @@ void Tile::calcAliveState()
 			}
 		}
 		if (count == 3 || (count == 2 && mState == ALIVE)) {
+			if (mState != ALIVE) {
+				if (mEffect != NONE) {
+					mEngine->getEventMan().addEvent(GameEvent(SPEEDUP, mX, mY));
+				} else {
+					mEngine->getEventMan().addEvent(GameEvent(CREATION, mX, mY));
+				}
+			}
 			mStoreState = ALIVE;
 		} else {
+			if (mState != EMPTY) {
+				mEngine->getEventMan().addEvent(GameEvent(DELETION, mX, mY));
+			}
 			mStoreState = EMPTY;
 		}
 	}
@@ -62,6 +73,7 @@ void Tile::assignStoredEffect()
 	}
 	if (mStoreEffectChanges > 1) {
 		mState = mStoreState = SOLID;
+		mEngine->getEventMan().addEvent(GameEvent(CRASH, mX, mY));
 	}
 	mStoreEffect = mEffect;
 	mStoreEffectChanges = 0;

@@ -7,9 +7,11 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/;$
 
 find_package(OGRE REQUIRED)
 find_package(OIS REQUIRED)
+find_package(OPENAL REQUIRED)
 
 add_definitions(-std=gnu++0x -Wall)
 include_directories(${OGRE_INCLUDE_DIRS})
 include_directories(${OIS_INCLUDE_DIRS})
+include_directories(${OPENAL_INCLUDE_DIRS})
 
 add_subdirectory(src/)

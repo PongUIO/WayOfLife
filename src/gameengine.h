@@ -14,10 +14,11 @@ class Player;
 #include<stdlib.h>
 #include<OgreVector3.h>
 #include <OgreResourceManager.h>
-#include "tilesetmanager.h"
 #include "billboarditem.h"
 #include "../gorilla/Gorilla.h"
 #include "tile.h"
+#include "eventmanager.h"
+#include "soundsystem.h"
 
 
 class GameEngine
@@ -36,6 +37,7 @@ public:
 	void setHUDSizeFactor(double factor);
 	void addBillboardItemToWorld(BillboardItem &item, Ogre::String id);
 	Tile* getTile(int x, int y, WrapMode mode = USEOFFMAP, CellState offmap = EMPTY);
+	EventManager &getEventMan() { return mEventMan; }
 protected:
 	Gorilla::Screen *mScreen;
 	Gorilla::Layer *mLayer;
@@ -50,8 +52,9 @@ protected:
 	std::vector<std::vector<Tile *>> mTiles;
 	bool mTickNext, mInitialized, mDirection;
 	double mHUDSizeFactor;
-	TileSetManager mTileSetMgr;
 	float mTransparancy;
+	SoundSystem mSoundSystem;
+	EventManager mEventMan;
 	
 	Ogre::Vector3 getCamOffset();
 	void updateHUD();

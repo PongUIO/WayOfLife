@@ -3,7 +3,7 @@
 #include "tile.h"
 
 
-GameEngine::GameEngine(Ogre::SceneManager *manager, Gorilla::Screen *screen)
+GameEngine::GameEngine(Ogre::SceneManager *manager, Gorilla::Screen *screen) : mSoundSystem(), mEventMan(&mSoundSystem)
 {
 	mScreen = screen;
 	mSceneMgr = manager;
@@ -14,6 +14,7 @@ GameEngine::GameEngine(Ogre::SceneManager *manager, Gorilla::Screen *screen)
 	mXSize = mYSize = 10;
 	mOverlayMgr = Ogre::OverlayManager::getSingletonPtr();
 	mLookatPos = Ogre::Vector3(mXSize*TILESIZE/2, mYSize*TILESIZE/2, 0);
+	mSoundSystem.setCamPos(mLookatPos + getCamOffset());
 	mManObj = manager->createManualObject();
 	
 	Ogre::SceneNode *node = manager->createSceneNode("board");
@@ -100,6 +101,7 @@ Tile *GameEngine::getTile(int x, int y, WrapMode mode, CellState offmap)
 
 void GameEngine::tick()
 {
+	mEventMan.clearAll();
 	updateHUD();
 	if (!mTickNext) {
 		return;
@@ -142,6 +144,10 @@ void GameEngine::tick()
 		}
 	}
 	updatePieces();
+	std::vector<GameEvent> *event = mEventMan.getEvents();
+	for (uint i = 0; i < event->size(); i++) {
+		mSoundSystem.playSound(event->at(i));
+	}
 }
 
 
@@ -188,6 +194,11 @@ void GameEngine::handleMouseEvent(Ogre::Vector3 vec, bool pressed, bool right, i
 			} else {
 				mTiles[x][y]->setState(EMPTY);
 				placeGhostPiece(x, y);
+			}
+			if (mTiles[x][y]->getSpecialEffect() != NONE && mTiles[x][y]->getState() == ALIVE) {
+				mSoundSystem.playSound(GameEvent(SPEEDUP, x, y));
+			} else {
+				mSoundSystem.playSound(GameEvent(CREATION, x, y));
 			}
 		} else {
 			if ((mLastX != x || mLastY != y) && mTiles[x][y]->getState() == EMPTY) {
@@ -296,6 +307,7 @@ void GameEngine::removeBillboardScreen()
 
 void GameEngine::updateCamera(Ogre::Camera *camera)
 {
+	mSoundSystem.setCamPos(mLookatPos + getCamOffset());
 	camera->setPosition(mLookatPos + getCamOffset());
 	camera->lookAt(mLookatPos);
 	camera->setNearClipDistance(1);
