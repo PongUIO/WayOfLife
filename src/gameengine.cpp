@@ -397,7 +397,9 @@ void GameEngine::updatePieces()
 				continue;
 			}
 			Ogre::Entity *ent = mSceneMgr->createEntity("blob.mesh");
-			if (mTiles[x][y]->getSpecialEffect() != NONE || mTiles[x][y]->getInheritedSpecialEffect() != NONE) {
+			if (mTiles[x][y]->getState() == SOLID) {
+				ent->setMaterialName("solidblob");
+			} else if (mTiles[x][y]->getSpecialEffect() != NONE || mTiles[x][y]->getInheritedSpecialEffect() != NONE) {
 				ent->setMaterialName("speedblob");
 			}
 			Ogre::SceneNode *node = mSceneMgr->createSceneNode();

@@ -23,15 +23,12 @@ void Tile::calcAliveState()
 			int tx = mX - (mInheritedEffect == MOVLEFT) + (mInheritedEffect == MOVRIGHT);
 			int ty = mY - (mInheritedEffect == MOVDOWN) + (mInheritedEffect == MOVUP);
 			Tile *target = mEngine->getTile(tx, ty);
-			if (target == NULL) {
+			if (target != NULL && (target->getState() == EMPTY || target->getInheritedSpecialEffect() != NONE)) {
+				target->setStoreState(ALIVE);
+				target->setStoreEffect(mInheritedEffect);
+			} else {
 				mStoreState = ALIVE;
 				mStoreEffect = mEffect;
-			} else {
-				if (target->getState() == EMPTY || target->getInheritedSpecialEffect() != NONE) {
-					target->setStoreState(ALIVE);
-					target->setStoreEffect(mInheritedEffect);
-				} else {
-				}
 			}
 		} else {
 		}
@@ -43,7 +40,7 @@ void Tile::calcAliveState()
 					continue;
 				}
 				Tile *t = mEngine->getTile(mX+x, mY+y);
-				if (t != NULL && t->getState() == ALIVE) {
+				if (t != NULL && (t->getState() == ALIVE || t->getState() == SOLID) && t->getInheritedSpecialEffect() == NONE) {
 					count++;
 				}
 			}
@@ -62,6 +59,9 @@ void Tile::assignStoredEffect()
 		mInheritedEffect = mStoreEffect;
 	} else {
 		mInheritedEffect = mEffect;
+	}
+	if (mStoreEffectChanges > 1) {
+		mState = mStoreState = SOLID;
 	}
 	mStoreEffect = mEffect;
 	mStoreEffectChanges = 0;
