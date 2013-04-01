@@ -69,7 +69,7 @@ void SoundSystem::playSound(GameEvent event) {
 	}
 	
 	
-	alSourcePlay(mSources[mCurSource]);
+	//alSourcePlay(mSources[mCurSource]);
 	mCurSource++;
 	mCurSource %= NUM_SOURCES;
 }

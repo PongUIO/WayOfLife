@@ -3,7 +3,8 @@
 #include "tile.h"
 
 
-GameEngine::GameEngine(Ogre::SceneManager *manager, Gorilla::Screen *screen) : mSoundSystem(), mEventMan(&mSoundSystem)
+GameEngine::GameEngine(Ogre::SceneManager *manager, Gorilla::Screen *screen) 
+			: mSoundSystem(), mEventMan(&mSoundSystem), mFileLoader("../WayOfLifeAssets/")
 {
 	mScreen = screen;
 	mSceneMgr = manager;
@@ -37,6 +38,7 @@ GameEngine::GameEngine(Ogre::SceneManager *manager, Gorilla::Screen *screen) : m
 	mTiles[7][7]->setSpecialEffect(MOVLEFT);
 	mTiles[8][7]->setSpecialEffect(MOVDOWN);
 	mTiles[9][7]->setSpecialEffect(MOVRIGHT);
+	mTiles[5][5]->setSpecialEffect(AIR);
 	updateManualObject();
 	updatePieces();
 	
@@ -186,6 +188,9 @@ void GameEngine::handleMouseEvent(Ogre::Vector3 vec, bool pressed, bool right, i
 			return;
 		}
 		if (pressed) {
+			if (mTiles[x][y]->getSpecialEffect() == AIR) {
+				return;
+			}
 			CellState state = mTiles[x][y]->getState();
 			mTiles[x][y]->setInheritedSpecialEffect(NONE);
 			if (state == EMPTY) {
@@ -212,7 +217,10 @@ void GameEngine::handleMouseEvent(Ogre::Vector3 vec, bool pressed, bool right, i
 
 void GameEngine::placeGhostPiece(int x, int y)
 {
-	updatePieces();
+	updatePieces(); 
+	if (mTiles[x][y]->getSpecialEffect() == AIR) {
+		return;
+	}
 	Ogre::Entity *ent = mSceneMgr->createEntity("blob.mesh");
 	Ogre::MaterialPtr mat;
 	if (mTiles[x][y]->getSpecialEffect() != NONE ) {
@@ -326,6 +334,9 @@ void GameEngine::updateManualObject()
 	mManObj->estimateVertexCount(mXSize*mYSize*4);
 	uint32_t count;
 	for (int i = 0; i <= SpecialEffect::MOVLEFT; i++) {
+		if (i == SpecialEffect::AIR) {
+			continue;
+		}
 		if (i == 0) {
 			count = 0;
 			mManObj->begin("defaulttile");

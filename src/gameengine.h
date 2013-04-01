@@ -19,6 +19,7 @@ class Player;
 #include "tile.h"
 #include "eventmanager.h"
 #include "soundsystem.h"
+#include "fileloader.h"
 
 
 class GameEngine
@@ -55,6 +56,7 @@ protected:
 	float mTransparancy;
 	SoundSystem mSoundSystem;
 	EventManager mEventMan;
+	FileLoader mFileLoader;
 	
 	Ogre::Vector3 getCamOffset();
 	void updateHUD();

@@ -15,7 +15,7 @@ Tile::Tile(GameEngine *engine, int x, int y)
 
 void Tile::calcAliveState()
 {
-	if (mState == SOLID) {
+	if (mState == SOLID || mEffect == AIR) {
 		return;
 	}
 	if (mInheritedEffect != NONE && mState == ALIVE) {
