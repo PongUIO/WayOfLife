@@ -58,6 +58,7 @@ protected:
 	SoundSystem mSoundSystem;
 	EventManager mEventMan;
 	FileManager mFileManager;
+	bool mEditMode;
 	
 	Ogre::Vector3 getCamOffset(void);
 	void updateHUD(void);

@@ -18,6 +18,7 @@ GameEngine::GameEngine(Ogre::SceneManager *manager, Gorilla::Screen *screen)
 	mLookatPos = Ogre::Vector3(mXSize*TILESIZE/2, mYSize*TILESIZE/2, 0);
 	mSoundSystem.setCamPos(mLookatPos + getCamOffset());
 	mManObj = manager->createManualObject();
+	mEditMode = true;
 	
 	Ogre::SceneNode *node = manager->createSceneNode("board");
 	node->attachObject(mManObj);
