@@ -1,6 +1,7 @@
 #ifndef TILE_H
 #define TILE_H
 #include "gamedefines.h"
+#include<OgrePrerequisites.h>
 #include<iostream>
 
 class GameEngine;
@@ -28,6 +29,10 @@ public:
 	void calcAliveState();
 	bool getDone() { return mDone; }
 	void setDone(bool v) { mDone = v; }
+	Ogre::Real getLoaded() { return -10*mLoaded; }
+	void updateLoaded(Ogre::Real dt);
+	void setLoaded(Ogre::Real l) { mLoaded = l; mDoneLoading = false; }
+	bool getDoneLoading() { return mDoneLoading; }
 
 private:
 	State mState, mStoreState;
@@ -36,6 +41,8 @@ private:
 	uint mX, mY, mStoreEffectChanges;
 	GameEngine *mEngine;
 	bool mDone;
+	bool mDoneLoading;
+	Ogre::Real mLoaded;
 	
 };
 

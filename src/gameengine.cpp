@@ -4,11 +4,11 @@
 
 
 GameEngine::GameEngine(Ogre::SceneManager *manager, Gorilla::Screen *screen) 
-			: mSoundSystem(), mEventMan(&mSoundSystem), mFileLoader()
+			: mSoundSystem(), mEventMan(&mSoundSystem), mFileManager()
 {
 	mScreen = screen;
 	mSceneMgr = manager;
-	mFileLoader.loadAllMaps("../WayOfLifeAssets/levels/");
+	mFileManager.loadAllMaps("../WayOfLifeAssets/levels/");
 	mInitialized = mDirection = mTickNext = false;
 	mHUDSizeFactor = 1.1;
 	mLastX = mLastY = -1;
@@ -29,8 +29,8 @@ GameEngine::GameEngine(Ogre::SceneManager *manager, Gorilla::Screen *screen)
 void GameEngine::setLevel(int level)
 {
 
-	MapInfo *info = mFileLoader.getMap(level);
-	setDimensions(info->mX, info->mY);
+	MapInfo *info = mFileManager.getMap(level);
+	setDimensions(info->mX, info->mY, true);
 	for (uint i = 0; i < (uint) mXSize; i++) 
 	{
 		for (uint j = 0; j < (uint) mYSize; j++) {
@@ -47,7 +47,7 @@ void GameEngine::setLevel(int level)
 	updateManualObject();
 	updatePieces();
 }
-void GameEngine::setDimensions(int xN, int yN)
+void GameEngine::setDimensions(int xN, int yN, bool fullLoad)
 {
 	xN = std::max(std::min(MAXBOARDSIZE, xN), 1);
 	yN = std::max(std::min(MAXBOARDSIZE, yN), 1);
@@ -61,6 +61,12 @@ void GameEngine::setDimensions(int xN, int yN)
 		for (int y = 0; y < yN; y++) {
 			if (y >= (int) mTiles[x].size()) {
 				mTiles[x].push_back(Tile(this, x, y));
+				if (!fullLoad) {
+					mTiles[x][y].setLoaded(10);
+				}
+			}
+			if (fullLoad) {
+				mTiles[x][y].setLoaded(x+y+5);
 			}
 		}
 		while ((int) mTiles[x].size() > yN) {
@@ -71,16 +77,30 @@ void GameEngine::setDimensions(int xN, int yN)
 	mYSize = yN;
 }
 
+MapInfo GameEngine::createMapInfo(void)
+{
+	MapInfo info;
+	info.mX = mXSize;
+	info.mY = mYSize;
+	for (int y = 0; y < mYSize; y++) {
+		for (int x = 0; x < mXSize; x++) {
+			info.mMap.push_back(mTiles[x][y].getSpecialEffect());
+			info.mCells.push_back(mTiles[x][y].getState());
+		}
+	}
+	return info;
+}
+
 void GameEngine::setHUDSizeFactor(double factor) {
 	mHUDSizeFactor = std::max(0.1, factor);
 	resizeHUD();
 }
 
-GameEngine::~GameEngine()
+GameEngine::~GameEngine(void)
 {
 }
 
-void GameEngine::init()
+void GameEngine::init(void)
 {
 	
 	Ogre::ResourceManager::ResourceMapIterator font = Ogre::FontManager::getSingleton().getResourceIterator();
@@ -93,12 +113,12 @@ void GameEngine::init()
 	
 }
 
-void GameEngine::resizeHUD()
+void GameEngine::resizeHUD(void)
 {
 	updateHUD();
 }
 
-void GameEngine::updateHUD() 
+void GameEngine::updateHUD(void) 
 {
 }
 
@@ -126,10 +146,19 @@ Tile *GameEngine::getTile(int x, int y, WrapMode mode, State offmap)
 }
 
 
-void GameEngine::tick()
+void GameEngine::tick(Ogre::Real dt)
 {
 	mEventMan.clearAll();
 	updateHUD();
+	if (!mTiles[mXSize-1][mYSize-1].getDoneLoading()) {
+		for (int x = 0; x < mXSize; x++) {
+			for (int y = 0; y < mYSize; y++) {
+				mTiles[x][y].updateLoaded(dt*10);
+			}
+		}
+		updateManualObject();
+		updatePieces();
+	}
 	if (!mTickNext) {
 		return;
 	}
@@ -182,6 +211,9 @@ void GameEngine::handleKeyEvent(OIS::KeyCode key, bool pressed)
 {
 	bool resize = false;
 	if (key == OIS::KC_SPACE && pressed) {
+		if (!mTiles[mXSize-1][mYSize-1].getDoneLoading()) {
+			return;
+		}
 		mTickNext = true;
 	} else if (key == OIS::KC_A && pressed) {
 		setDimensions(mXSize+1, mYSize);
@@ -216,6 +248,9 @@ void GameEngine::handleMouseEvent(Ogre::Vector3 vec, bool pressed, bool right, i
 		mLastX = x;
 		mLastY = y;
 	} else {
+		if (!mTiles[mXSize-1][mYSize-1].getDoneLoading()) {
+			return;
+		}
 		Ogre::Vector3 dist =  mLookatPos + getCamOffset();
 		if (std::abs(vec.z) < 0.001) {
 			return;
@@ -260,7 +295,10 @@ void GameEngine::handleMouseEvent(Ogre::Vector3 vec, bool pressed, bool right, i
 
 void GameEngine::placeGhostPiece(int x, int y)
 {
-	updatePieces(); 
+	updatePieces();
+	if (!mTiles[mXSize-1][mYSize-1].getDoneLoading()) {
+		return;
+	}
 	if (mTiles[x][y].getSpecialEffect() == AIR) {
 		return;
 	}
@@ -290,7 +328,7 @@ void GameEngine::placeGhostPiece(int x, int y)
 }
 
 
-void GameEngine::createBillboardScreen()
+void GameEngine::createBillboardScreen(void)
 {
 	/*Ogre::OverlayContainer *bg = static_cast<Ogre::OverlayContainer *>(
 	 *		mOverlayMgr->createOverlayElement("Panel", "itembg"));
@@ -336,7 +374,7 @@ mInventoryOverlay->show();*/
 	
 }
 
-void GameEngine::removeBillboardScreen()
+void GameEngine::removeBillboardScreen(void)
 {
 	Ogre::Overlay::Overlay2DElementsIterator itr = mInventoryOverlay->get2DElementsIterator();
 	while (itr.hasMoreElements()) {
@@ -365,12 +403,12 @@ void GameEngine::updateCamera(Ogre::Camera *camera)
 	camera->setFarClipDistance(500);
 }
 
-Ogre::Vector3 GameEngine::getCamOffset()
+Ogre::Vector3 GameEngine::getCamOffset(void)
 {
 	return Ogre::Vector3(0, -80, 80);
 }
 
-void GameEngine::updateManualObject()
+void GameEngine::updateManualObject(void)
 {
 	mManObj->clear();
 	mManObj->estimateIndexCount(mXSize*mYSize*6);
@@ -396,13 +434,14 @@ void GameEngine::updateManualObject()
 				count+=4;
 				int xt = x * TILESIZE;
 				int yt = y * TILESIZE;
-				mManObj->position(xt, yt, 0);
+				Ogre::Real z = mTiles[x][y].getLoaded();
+				mManObj->position(xt, yt, z);
 				useTexCoord((SpecialEffect)i, 0);
-				mManObj->position(xt+TILESIZE, yt, 0);
+				mManObj->position(xt+TILESIZE, yt, z);
 				useTexCoord((SpecialEffect)i, 1);
-				mManObj->position(xt+TILESIZE, yt+TILESIZE, 0);
+				mManObj->position(xt+TILESIZE, yt+TILESIZE, z);
 				useTexCoord((SpecialEffect)i, 2);
-				mManObj->position(xt, yt+TILESIZE, 0);
+				mManObj->position(xt, yt+TILESIZE, z);
 				useTexCoord((SpecialEffect)i, 3);
 				mManObj->quad(count-4, count-3, count-2, count-1);
 			}
@@ -435,7 +474,7 @@ void GameEngine::useTexCoord(SpecialEffect dir, int c)
 	
 }
 
-void GameEngine::updatePieces()
+void GameEngine::updatePieces(void)
 {
 	for (std::vector<Ogre::SceneNode *>::iterator itr = mPiecesNodes.begin(); itr != mPiecesNodes.end(); itr++) {
 		mSceneMgr->destroySceneNode((*itr));
@@ -454,7 +493,8 @@ void GameEngine::updatePieces()
 			}
 			Ogre::SceneNode *node = mSceneMgr->createSceneNode();
 			node->attachObject(ent);
-			node->setPosition(x*TILESIZE, y*TILESIZE, 0);
+			Ogre::Real z = mTiles[x][y].getLoaded();
+			node->setPosition(x*TILESIZE, y*TILESIZE, z);
 			mPiecesNodes.push_back(node);
 			mSceneMgr->getRootSceneNode()->addChild(node);
 		}

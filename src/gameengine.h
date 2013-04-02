@@ -1,7 +1,8 @@
 #ifndef GAMEENGINE_H
 #define GAMEENGINE_H
 
-class Creature;class GameEngine;
+class Creature;
+class GameEngine;
 class Player;
 #include<OgreSceneManager.h>
 #include<OgreBillboardSet.h>
@@ -19,7 +20,7 @@ class Player;
 #include "tile.h"
 #include "eventmanager.h"
 #include "soundsystem.h"
-#include "fileloader.h"
+#include "filemanager.h"
 
 
 class GameEngine
@@ -27,18 +28,18 @@ class GameEngine
 	
 public:
 	GameEngine(Ogre::SceneManager*, Gorilla::Screen *screen);
-	virtual ~GameEngine();
-	void tick();
-	void init();
+	virtual ~GameEngine(void);
+	void tick(Ogre::Real dt);
+	void init(void);
 	void handleKeyEvent(OIS::KeyCode, bool);
 	void handleMouseEvent(Ogre::Vector3 vec, bool, bool, int, int);
 	void updateCamera(Ogre::Camera *);
-	bool getInit() { return mInitialized; }
-	Ogre::SceneManager* getSceneMgr() { return mSceneMgr; }
+	bool getInit(void) { return mInitialized; }
+	Ogre::SceneManager* getSceneMgr(void) { return mSceneMgr; }
 	void setHUDSizeFactor(double factor);
 	void addBillboardItemToWorld(BillboardItem &item, Ogre::String id);
 	Tile* getTile(int x, int y, WrapMode mode = USEOFFMAP, State offmap = EMPTY);
-	EventManager &getEventMan() { return mEventMan; }
+	EventManager &getEventMan(void) { return mEventMan; }
 protected:
 	Gorilla::Screen *mScreen;
 	Gorilla::Layer *mLayer;
@@ -56,19 +57,20 @@ protected:
 	float mTransparancy;
 	SoundSystem mSoundSystem;
 	EventManager mEventMan;
-	FileLoader mFileLoader;
+	FileManager mFileManager;
 	
-	Ogre::Vector3 getCamOffset();
-	void updateHUD();
-	void resizeHUD();
-	void updateManualObject();
-	void updatePieces();
-	void createBillboardScreen();
-	void removeBillboardScreen();
+	Ogre::Vector3 getCamOffset(void);
+	void updateHUD(void);
+	void resizeHUD(void);
+	void updateManualObject(void);
+	void updatePieces(void);
+	void createBillboardScreen(void);
+	void removeBillboardScreen(void);
 	void placeGhostPiece(int x, int y);
 	void useTexCoord(SpecialEffect dir, int c);
 	void setLevel(int level);
-	void setDimensions(int x, int y);
+	void setDimensions(int x, int y, bool fullLoad = false);
+	MapInfo createMapInfo(void);
 	
 };
 

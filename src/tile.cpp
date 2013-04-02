@@ -10,7 +10,8 @@ Tile::Tile(GameEngine *engine, uint x, uint y)
 	mEffect = mInheritedEffect = mStoreEffect = NONE;
 	mX = x;
 	mY = y;
-	mDone = false;
+	mDone = mDoneLoading = false;
+	mLoaded = 0;
 }
 
 void Tile::calcAliveState()
@@ -66,17 +67,35 @@ void Tile::calcAliveState()
 
 void Tile::assignStoredEffect()
 {
-	if (mStoreEffectChanges <= 1 && mEffect == NONE) {
+	if (mStoreEffectChanges <= 1 && mEffect == NONE) 
+	{
 		mInheritedEffect = mStoreEffect;
-	} else {
+	} else 
+	{
 		mInheritedEffect = mEffect;
 	}
-	if (mStoreEffectChanges > 1) {
+	if (mStoreEffectChanges > 1) 
+	{
 		mState = mStoreState = SOLID;
 		mEngine->getEventMan().addEvent(GameEvent(CRASH, mX, mY));
 	}
 	mStoreEffect = mEffect;
 	mStoreEffectChanges = 0;
+}
+
+void Tile::updateLoaded(Ogre::Real dt)
+{
+	if (mDoneLoading) 
+	{ 
+		return;
+	} 
+	mLoaded = mLoaded-dt; 
+	if (mLoaded < 0) 
+	{ 
+		mLoaded = 0; 
+		mDoneLoading = true; 
+	} 
+
 }
 
 

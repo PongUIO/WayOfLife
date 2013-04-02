@@ -75,7 +75,7 @@ protected:
 	OgreBites::ParamsPanel* mDetailsPanel;     // sample details panel
 	bool mCursorWasVisible;                    // was cursor visible before dialog appeared
 	bool mShutDown;
-	void tick(void);
+	void tick(Ogre::Real dt);
 	
 	//OIS Input devices
 	OIS::InputManager* mInputManager;

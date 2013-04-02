@@ -229,7 +229,8 @@ bool BaseApplication::setup(void)
 //-------------------------------------------------------------------------------------
 bool BaseApplication::frameRenderingQueued(const Ogre::FrameEvent& evt)
 {
-	tick();
+	Ogre::Real dt = evt.timeSinceLastFrame;
+	tick(dt);
 	if(mWindow->isClosed())
 		return false;
 
@@ -413,9 +414,9 @@ void BaseApplication::windowClosed(Ogre::RenderWindow* rw)
 	}
 }
 
-void BaseApplication::tick(void) {
+void BaseApplication::tick(Ogre::Real dt) {
 	if (mEngine->getInit()) {
-		mEngine->tick();
+		mEngine->tick(dt);
 		mEngine->updateCamera(mCamera);
 	}
 }

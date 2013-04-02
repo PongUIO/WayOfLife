@@ -1,11 +1,11 @@
-#include "fileloader.h"
+#include "filemanager.h"
 #include <OgreConfigFile.h>
 
-FileLoader::FileLoader()
+FileManager::FileManager()
 {
 }
 
-void FileLoader::loadMap(std::string file, Ogre::FileSystemArchive *archive)
+void FileManager::loadMap(std::string file, Ogre::FileSystemArchive *archive)
 {
 	Ogre::DataStreamPtr ptr = archive->open(file);
 	MapInfo info;
@@ -58,18 +58,14 @@ void FileLoader::loadMap(std::string file, Ogre::FileSystemArchive *archive)
 	mMaps.push_back(info);
 }
 
-MapInfo *FileLoader::getMap(int map) {
-	return &mMaps[map];
-}
-
-void FileLoader::loadAllMaps(std::string path)
+void FileManager::loadAllMaps(std::string path)
 {
 	Ogre::FileSystemArchive archive(path, "");
 	
 	loadMap("testlevel.wol", &archive);
 }
 
-FileLoader::~FileLoader()
+FileManager::~FileManager()
 {
 
 }

@@ -1,16 +1,17 @@
-#ifndef FILELOADER_H
-#define FILELOADER_H
+#ifndef FILEMANAGER_H
+#define FILEMANAGER_H
 #include<OgreString.h>
 #include<OgreFileSystem.h>
 #include "mapinfo.h"
 
-class FileLoader
+class FileManager
 {
 	
 public:
-	FileLoader();
-	virtual ~FileLoader();
-	MapInfo *getMap(int map);
+	FileManager();
+	virtual ~FileManager();
+	MapInfo *getMap(int map) { return &mMaps[map]; }
+	void addMap(MapInfo m) { mMaps.push_back(m); }
 	void loadAllMaps(std::string path);
 private:
 	std::string mPath;
@@ -18,4 +19,4 @@ private:
 	std::vector<MapInfo> mMaps;
 };
 
-#endif // FILELOADER_H
+#endif // FILEMANAGER_H
