@@ -4,10 +4,11 @@
 
 
 GameEngine::GameEngine(Ogre::SceneManager *manager, Gorilla::Screen *screen) 
-			: mSoundSystem(), mEventMan(&mSoundSystem), mFileLoader("../WayOfLifeAssets/")
+			: mSoundSystem(), mEventMan(&mSoundSystem), mFileLoader()
 {
 	mScreen = screen;
 	mSceneMgr = manager;
+	mFileLoader.loadAllMaps("../WayOfLifeAssets/levels/");
 	mInitialized = mDirection = mTickNext = false;
 	mHUDSizeFactor = 1.1;
 	mLastX = mLastY = -1;
@@ -22,29 +23,26 @@ GameEngine::GameEngine(Ogre::SceneManager *manager, Gorilla::Screen *screen)
 	node->attachObject(mManObj);
 	node->setPosition(0,0,0);
 	manager->getRootSceneNode()->addChild(node);
+	setLevel(0);
+}
+
+void GameEngine::setLevel(int level)
+{
+
+	MapInfo *info = mFileLoader.getMap(0);
+	mXSize = info->mX;
+	mYSize = info->mY;
 	updateDataStructures();
-	mTiles[0][1]->setState(ALIVE);
-	mTiles[0][0]->setState(ALIVE);
-	mTiles[1][0]->setState(ALIVE);
-	mTiles[1][6]->setSpecialEffect(MOVDOWN);
-	mTiles[1][2]->setSpecialEffect(MOVUP);
-	mTiles[6][6]->setSpecialEffect(MOVUP);
-	mTiles[9][1]->setSpecialEffect(MOVLEFT);
-	mTiles[1][1]->setSpecialEffect(MOVRIGHT);
-	mTiles[7][6]->setSpecialEffect(MOVLEFT);
-	mTiles[8][6]->setSpecialEffect(MOVDOWN);
-	mTiles[9][6]->setSpecialEffect(MOVRIGHT);
-	mTiles[6][7]->setSpecialEffect(MOVUP);
-	mTiles[7][7]->setSpecialEffect(MOVLEFT);
-	mTiles[8][7]->setSpecialEffect(MOVDOWN);
-	mTiles[9][7]->setSpecialEffect(MOVRIGHT);
-	mTiles[5][5]->setSpecialEffect(AIR);
+	for (int i = 0; i < mXSize; i++) 
+	{
+		for (int j = 0; j < mYSize; j++) {
+			mTiles[i][j]->setSpecialEffect(info->mMap[i + j*mXSize]);
+		}
+	}
 	updateManualObject();
 	updatePieces();
-	
-	
-	
 }
+
 
 void GameEngine::setHUDSizeFactor(double factor) {
 	mHUDSizeFactor = std::max(0.1, factor);

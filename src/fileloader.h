@@ -1,18 +1,21 @@
 #ifndef FILELOADER_H
 #define FILELOADER_H
-#include<string.h>
-#include<string>
+#include<OgreString.h>
+#include<OgreFileSystem.h>
 #include "mapinfo.h"
 
 class FileLoader
 {
 	
 public:
-	FileLoader(std::string path);
+	FileLoader();
 	virtual ~FileLoader();
-	MapInfo loadMap(std::string file);
+	MapInfo *getMap(int map);
+	void loadAllMaps(std::string path);
 private:
 	std::string mPath;
+	void loadMap(std::string file, Ogre::FileSystemArchive *archive);
+	std::vector<MapInfo> mMaps;
 };
 
 #endif // FILELOADER_H

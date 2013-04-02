@@ -68,6 +68,7 @@ protected:
 	void updateDataStructures();
 	void placeGhostPiece(int x, int y);
 	void useTexCoord(SpecialEffect dir, int c);
+	void setLevel(int level);
 };
 
 #endif // GAMEENGINE_H
