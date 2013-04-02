@@ -47,21 +47,23 @@ void GameEngine::setLevel(int level)
 	updateManualObject();
 	updatePieces();
 }
-void GameEngine::setDimensions(uint xN, uint yN)
+void GameEngine::setDimensions(int xN, int yN)
 {
-	while (mTiles.size() < xN) {
+	xN = std::max(std::min(MAXBOARDSIZE, xN), 1);
+	yN = std::max(std::min(MAXBOARDSIZE, yN), 1);
+	while ((int)mTiles.size() < xN) {
 		mTiles.push_back(std::vector<Tile>());
 	}
-	while (mTiles.size() > xN) {
+	while ((int)mTiles.size() > xN) {
 		mTiles.pop_back();
 	}
-	for (uint x = 0; x < xN; x++) {
-		for (uint y = 0; y < yN; y++) {
-			if (y >= mTiles[x].size()) {
+	for (int x = 0; x < xN; x++) {
+		for (int y = 0; y < yN; y++) {
+			if (y >= (int) mTiles[x].size()) {
 				mTiles[x].push_back(Tile(this, x, y));
 			}
 		}
-		while (mTiles[x].size() > yN) {
+		while ((int) mTiles[x].size() > yN) {
 			mTiles[x].pop_back();
 		}
 	}
@@ -178,8 +180,26 @@ void GameEngine::tick()
 
 void GameEngine::handleKeyEvent(OIS::KeyCode key, bool pressed) 
 {
+	bool resize = false;
 	if (key == OIS::KC_SPACE && pressed) {
 		mTickNext = true;
+	} else if (key == OIS::KC_A && pressed) {
+		setDimensions(mXSize+1, mYSize);
+		resize = true;
+	} else if (key == OIS::KC_Z && pressed) {
+		setDimensions(mXSize-1, mYSize);
+		resize = true;
+	} else if (key == OIS::KC_S && pressed) {
+		setDimensions(mXSize, mYSize+1);
+		resize = true;
+	} else if (key == OIS::KC_X && pressed) {
+		setDimensions(mXSize, mYSize-1);
+		resize = true;
+	}
+	
+	if (resize) {
+		updateManualObject();
+		updatePieces();
 	}
 }
 

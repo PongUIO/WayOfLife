@@ -68,7 +68,7 @@ protected:
 	void placeGhostPiece(int x, int y);
 	void useTexCoord(SpecialEffect dir, int c);
 	void setLevel(int level);
-	void setDimensions(uint x, uint y);
+	void setDimensions(int x, int y);
 	
 };
 
