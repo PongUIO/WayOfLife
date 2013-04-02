@@ -66,7 +66,7 @@ void GameEngine::setDimensions(int xN, int yN, bool fullLoad)
 				}
 			}
 			if (fullLoad) {
-				mTiles[x][y].setLoaded(x+y+5);
+				mTiles[x][y].setLoaded(yN - x +  xN - y + 5);
 			}
 		}
 		while ((int) mTiles[x].size() > yN) {
@@ -150,7 +150,7 @@ void GameEngine::tick(Ogre::Real dt)
 {
 	mEventMan.clearAll();
 	updateHUD();
-	if (!mTiles[mXSize-1][mYSize-1].getDoneLoading()) {
+	if (!getMapLoading()) {
 		for (int x = 0; x < mXSize; x++) {
 			for (int y = 0; y < mYSize; y++) {
 				mTiles[x][y].updateLoaded(dt*10);
@@ -211,7 +211,7 @@ void GameEngine::handleKeyEvent(OIS::KeyCode key, bool pressed)
 {
 	bool resize = false;
 	if (key == OIS::KC_SPACE && pressed) {
-		if (!mTiles[mXSize-1][mYSize-1].getDoneLoading()) {
+		if (!getMapLoading()) {
 			return;
 		}
 		mTickNext = true;
@@ -248,7 +248,7 @@ void GameEngine::handleMouseEvent(Ogre::Vector3 vec, bool pressed, bool right, i
 		mLastX = x;
 		mLastY = y;
 	} else {
-		if (!mTiles[mXSize-1][mYSize-1].getDoneLoading()) {
+		if (!getMapLoading()) {
 			return;
 		}
 		Ogre::Vector3 dist =  mLookatPos + getCamOffset();
@@ -296,7 +296,7 @@ void GameEngine::handleMouseEvent(Ogre::Vector3 vec, bool pressed, bool right, i
 void GameEngine::placeGhostPiece(int x, int y)
 {
 	updatePieces();
-	if (!mTiles[mXSize-1][mYSize-1].getDoneLoading()) {
+	if (!getMapLoading()) {
 		return;
 	}
 	if (mTiles[x][y].getSpecialEffect() == AIR) {
@@ -315,7 +315,7 @@ void GameEngine::placeGhostPiece(int x, int y)
 	p->setDepthWriteEnabled(false);
 	Ogre::TextureUnitState *tus = p->createTextureUnitState();
 	tus->setAlphaOperation(Ogre::LayerBlendOperationEx::LBX_SOURCE1,
-			       Ogre::LayerBlendSource::LBS_MANUAL,
+			Ogre::LayerBlendSource::LBS_MANUAL,
 			Ogre::LayerBlendSource::LBS_CURRENT,
 			mTransparancy
 	);

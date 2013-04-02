@@ -29,7 +29,7 @@ public:
 	void calcAliveState();
 	bool getDone() { return mDone; }
 	void setDone(bool v) { mDone = v; }
-	Ogre::Real getLoaded() { return -10*mLoaded; }
+	Ogre::Real getLoaded() { return -5*mLoaded*mLoaded; }
 	void updateLoaded(Ogre::Real dt);
 	void setLoaded(Ogre::Real l) { mLoaded = l; mDoneLoading = false; }
 	bool getDoneLoading() { return mDoneLoading; }

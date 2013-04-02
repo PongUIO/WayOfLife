@@ -70,6 +70,8 @@ protected:
 	void useTexCoord(SpecialEffect dir, int c);
 	void setLevel(int level);
 	void setDimensions(int x, int y, bool fullLoad = false);
+	bool getMapLoading() { return mTiles[0][0].getDoneLoading() 
+			&& mTiles[mXSize-1][mYSize-1].getDoneLoading();}
 	MapInfo createMapInfo(void);
 	
 };
