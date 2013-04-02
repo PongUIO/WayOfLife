@@ -50,7 +50,7 @@ protected:
 	int mLastX, mLastY; // Used for storing the last ghost-piece location and position while dragging.
 	Ogre::Vector3 mLookatPos;
 	std::vector<Ogre::SceneNode *> mPiecesNodes;
-	std::vector<std::vector<Tile *>> mTiles;
+	std::vector<std::vector<Tile>> mTiles;
 	bool mTickNext, mInitialized, mDirection;
 	double mHUDSizeFactor;
 	float mTransparancy;
@@ -65,10 +65,11 @@ protected:
 	void updatePieces();
 	void createBillboardScreen();
 	void removeBillboardScreen();
-	void updateDataStructures();
 	void placeGhostPiece(int x, int y);
 	void useTexCoord(SpecialEffect dir, int c);
 	void setLevel(int level);
+	void setDimensions(uint x, uint y);
+	
 };
 
 #endif // GAMEENGINE_H

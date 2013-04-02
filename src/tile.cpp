@@ -1,7 +1,7 @@
 #include "tile.h"
 #include "gameengine.h"
 
-Tile::Tile(GameEngine *engine, int x, int y)
+Tile::Tile(GameEngine *engine, uint x, uint y)
 {
 	mStoreEffectChanges = 0;
 	mEngine = engine;

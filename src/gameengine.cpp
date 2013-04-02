@@ -13,7 +13,7 @@ GameEngine::GameEngine(Ogre::SceneManager *manager, Gorilla::Screen *screen)
 	mHUDSizeFactor = 1.1;
 	mLastX = mLastY = -1;
 	mTransparancy = 0.5f;
-	mXSize = mYSize = 10;
+	mXSize = mYSize = 0;
 	mOverlayMgr = Ogre::OverlayManager::getSingletonPtr();
 	mLookatPos = Ogre::Vector3(mXSize*TILESIZE/2, mYSize*TILESIZE/2, 0);
 	mSoundSystem.setCamPos(mLookatPos + getCamOffset());
@@ -30,28 +30,44 @@ void GameEngine::setLevel(int level)
 {
 
 	MapInfo *info = mFileLoader.getMap(level);
-	mXSize = info->mX;
-	mYSize = info->mY;
-	updateDataStructures();
-	for (int i = 0; i < mXSize; i++) 
+	setDimensions(info->mX, info->mY);
+	for (uint i = 0; i < (uint) mXSize; i++) 
 	{
-		for (int j = 0; j < mYSize; j++) {
+		for (uint j = 0; j < (uint) mYSize; j++) {
 			size_t ind = i + j * mXSize;
-			if (info->mMap.size() > ind) {
-				mTiles[i][j]->setSpecialEffect(info->mMap[ind]);
+			if (info->mMap.size() > ind && i < mTiles.size() && j < mTiles[i].size()) {
+				mTiles[i][j].setSpecialEffect(info->mMap[ind]);
 			}
-			std::cout << ind << std::endl;
-			if (info->mCells.size() > ind) {
-				std::cout << info->mCells[ind];
-				mTiles[i][j]->setState(info->mCells[ind]);
-				mTiles[i][j]->setStoreState(info->mCells[ind]);
+			if (info->mCells.size() > ind && i < mTiles.size() && j < mTiles[i].size()) {
+				mTiles[i][j].setState(info->mCells[ind]);
+				mTiles[i][j].setStoreState(info->mCells[ind]);
 			}
 		}
 	}
 	updateManualObject();
 	updatePieces();
 }
-
+void GameEngine::setDimensions(uint xN, uint yN)
+{
+	while (mTiles.size() < xN) {
+		mTiles.push_back(std::vector<Tile>());
+	}
+	while (mTiles.size() > xN) {
+		mTiles.pop_back();
+	}
+	for (uint x = 0; x < xN; x++) {
+		for (uint y = 0; y < yN; y++) {
+			if (y >= mTiles[x].size()) {
+				mTiles[x].push_back(Tile(this, x, y));
+			}
+		}
+		while (mTiles[x].size() > yN) {
+			mTiles[x].pop_back();
+		}
+	}
+	mXSize = xN;
+	mYSize = yN;
+}
 
 void GameEngine::setHUDSizeFactor(double factor) {
 	mHUDSizeFactor = std::max(0.1, factor);
@@ -104,7 +120,7 @@ Tile *GameEngine::getTile(int x, int y, WrapMode mode, State offmap)
 	if (x < 0 || x >= mXSize || y < 0 || y >= mYSize) {
 		return NULL;
 	}
-	return mTiles[x][y];
+	return &mTiles[x][y];
 }
 
 
@@ -118,38 +134,38 @@ void GameEngine::tick()
 	mTickNext = false;
 	for (int x = 0; x < mXSize; x++) {
 		for (int y = 0; y < mYSize; y++) {
-			if (mTiles[x][y]->getInheritedSpecialEffect() == NONE || mTiles[x][y]->getState() == EMPTY) {
-				mTiles[x][y]->calcAliveState();
-				mTiles[x][y]->setDone(true);
+			if (mTiles[x][y].getInheritedSpecialEffect() == NONE || mTiles[x][y].getState() == EMPTY) {
+				mTiles[x][y].calcAliveState();
+				mTiles[x][y].setDone(true);
 			}
 		}
 	}
 	for (int x = 0; x < mXSize; x++) {
 		for (int y = 0; y < mYSize; y++) {
-			if (mTiles[x][y]->getDone()) {
-				mTiles[x][y]->assignStoredState();
+			if (mTiles[x][y].getDone()) {
+				mTiles[x][y].assignStoredState();
 			}
 		}
 	}
 	for (int x = 0; x < mXSize; x++) {
 		for (int y = 0; y < mYSize; y++) {
-			if (!mTiles[x][y]->getDone()) {
-				mTiles[x][y]->setStoreState(EMPTY);
+			if (!mTiles[x][y].getDone()) {
+				mTiles[x][y].setStoreState(EMPTY);
 			}
 		}
 	}
 	for (int x = 0; x < mXSize; x++) {
 		for (int y = 0; y < mYSize; y++) {
-			if (!mTiles[x][y]->getDone()) {
-				mTiles[x][y]->calcAliveState();
+			if (!mTiles[x][y].getDone()) {
+				mTiles[x][y].calcAliveState();
 			}
 		}
 	}
 	for (int x = 0; x < mXSize; x++) {
 		for (int y = 0; y < mYSize; y++) {
-			mTiles[x][y]->assignStoredState();
-			mTiles[x][y]->assignStoredEffect();
-			mTiles[x][y]->setDone(false);
+			mTiles[x][y].assignStoredState();
+			mTiles[x][y].assignStoredEffect();
+			mTiles[x][y].setDone(false);
 		}
 	}
 	updatePieces();
@@ -188,32 +204,32 @@ void GameEngine::handleMouseEvent(Ogre::Vector3 vec, bool pressed, bool right, i
 		Ogre::Vector3 outPos = mLookatPos + getCamOffset() - zDiff*vec;
 		int x = outPos.x/TILESIZE;
 		int y = outPos.y/TILESIZE;
-		if (x < 0 || x >= mXSize || y < 0 || y >= mYSize || (mTiles[x][y]->getState() != EMPTY && !pressed)) {
+		if (x < 0 || x >= mXSize || y < 0 || y >= mYSize || (mTiles[x][y].getState() != EMPTY && !pressed)) {
 			if (mLastX != -1) {
 				updatePieces();
 			}
 			return;
 		}
 		if (pressed) {
-			if (mTiles[x][y]->getSpecialEffect() == AIR) {
+			if (mTiles[x][y].getSpecialEffect() == AIR) {
 				return;
 			}
-			State state = mTiles[x][y]->getState();
-			mTiles[x][y]->setInheritedSpecialEffect(NONE);
+			State state = mTiles[x][y].getState();
+			mTiles[x][y].setInheritedSpecialEffect(NONE);
 			if (state == EMPTY) {
-				mTiles[x][y]->setState(ALIVE);
+				mTiles[x][y].setState(ALIVE);
 				updatePieces();
 			} else {
-				mTiles[x][y]->setState(EMPTY);
+				mTiles[x][y].setState(EMPTY);
 				placeGhostPiece(x, y);
 			}
-			if (mTiles[x][y]->getSpecialEffect() != NONE && mTiles[x][y]->getState() == ALIVE) {
+			if (mTiles[x][y].getSpecialEffect() != NONE && mTiles[x][y].getState() == ALIVE) {
 				mSoundSystem.playSound(GameEvent(SPEEDUP, x, y));
 			} else {
 				mSoundSystem.playSound(GameEvent(CREATION, x, y));
 			}
 		} else {
-			if ((mLastX != x || mLastY != y) && mTiles[x][y]->getState() == EMPTY) {
+			if ((mLastX != x || mLastY != y) && mTiles[x][y].getState() == EMPTY) {
 				placeGhostPiece(x, y);
 				mLastX = x;
 				mLastX = y;
@@ -225,12 +241,12 @@ void GameEngine::handleMouseEvent(Ogre::Vector3 vec, bool pressed, bool right, i
 void GameEngine::placeGhostPiece(int x, int y)
 {
 	updatePieces(); 
-	if (mTiles[x][y]->getSpecialEffect() == AIR) {
+	if (mTiles[x][y].getSpecialEffect() == AIR) {
 		return;
 	}
 	Ogre::Entity *ent = mSceneMgr->createEntity("blob.mesh");
 	Ogre::MaterialPtr mat;
-	if (mTiles[x][y]->getSpecialEffect() != NONE ) {
+	if (mTiles[x][y].getSpecialEffect() != NONE ) {
 		mat = Ogre::MaterialManager::getSingletonPtr()->getByName("speedblob");
 		mat = mat->clone("speedblobtrans");
 	} else {
@@ -354,7 +370,7 @@ void GameEngine::updateManualObject()
 		}
 		for (int x = 0; x < mXSize; x++) {
 			for (int y = 0; y < mYSize; y++) {
-				if (mTiles[x][y]->getSpecialEffect() != i) {
+				if (mTiles[x][y].getSpecialEffect() != i) {
 					continue;
 				}
 				count+=4;
@@ -399,22 +415,6 @@ void GameEngine::useTexCoord(SpecialEffect dir, int c)
 	
 }
 
-void GameEngine::updateDataStructures()
-{
-	for (std::vector<std::vector<Tile *>>::iterator itr = mTiles.begin(); itr != mTiles.end(); itr++) {
-		for (uint i = 0; i < (*itr).size(); i ++) {
-			delete (*itr)[i];
-		}
-	}
-	mTiles.clear();
-	for (int x = 0; x < mXSize; x++) {
-		mTiles.push_back(std::vector<Tile *>());
-		for (int y = 0; y < mYSize; y++) {
-			mTiles[x].push_back(new Tile(this, x, y));
-		}
-	}
-}
-
 void GameEngine::updatePieces()
 {
 	for (std::vector<Ogre::SceneNode *>::iterator itr = mPiecesNodes.begin(); itr != mPiecesNodes.end(); itr++) {
@@ -423,13 +423,13 @@ void GameEngine::updatePieces()
 	mPiecesNodes.clear();
 	for (int x = 0; x < mXSize; x++) {
 		for (int y = 0; y < mYSize; y++) {
-			if (mTiles[x][y]->getState() == EMPTY) {
+			if (mTiles[x][y].getState() == EMPTY) {
 				continue;
 			}
 			Ogre::Entity *ent = mSceneMgr->createEntity("blob.mesh");
-			if (mTiles[x][y]->getState() == SOLID) {
+			if (mTiles[x][y].getState() == SOLID) {
 				ent->setMaterialName("solidblob");
-			} else if (mTiles[x][y]->getSpecialEffect() != NONE || mTiles[x][y]->getInheritedSpecialEffect() != NONE) {
+			} else if (mTiles[x][y].getSpecialEffect() != NONE || mTiles[x][y].getInheritedSpecialEffect() != NONE) {
 				ent->setMaterialName("speedblob");
 			}
 			Ogre::SceneNode *node = mSceneMgr->createSceneNode();

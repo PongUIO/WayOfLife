@@ -9,7 +9,7 @@ class Tile
 {
 	
 public:
-	Tile(GameEngine *engine, int x, int y);
+	Tile(GameEngine *engine, uint x, uint y);
 	virtual ~Tile();
 	State getState() { return mState; }
 	void setState(State v) { mState = v; }
@@ -33,7 +33,7 @@ private:
 	State mState, mStoreState;
 	TileType mType;
 	SpecialEffect mEffect, mInheritedEffect, mStoreEffect;
-	int mX, mY, mStoreEffectChanges;
+	uint mX, mY, mStoreEffectChanges;
 	GameEngine *mEngine;
 	bool mDone;
 	
