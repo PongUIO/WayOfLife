@@ -11,10 +11,10 @@ class Tile
 public:
 	Tile(GameEngine *engine, int x, int y);
 	virtual ~Tile();
-	CellState getState() { return mState; }
-	void setState(CellState v) { mState = v; }
-	CellState getStoreState() { return mStoreState; }
-	void setStoreState(CellState v) { mStoreState = v; }
+	State getState() { return mState; }
+	void setState(State v) { mState = v; }
+	State getStoreState() { return mStoreState; }
+	void setStoreState(State v) { mStoreState = v; }
 	void assignStoredState() { mState = mStoreState; }
 	SpecialEffect getSpecialEffect() { return mEffect; }
 	void setSpecialEffect(SpecialEffect v) { mEffect = v; mInheritedEffect = mEffect; }
@@ -30,7 +30,7 @@ public:
 	void setDone(bool v) { mDone = v; }
 
 private:
-	CellState mState, mStoreState;
+	State mState, mStoreState;
 	TileType mType;
 	SpecialEffect mEffect, mInheritedEffect, mStoreEffect;
 	int mX, mY, mStoreEffectChanges;

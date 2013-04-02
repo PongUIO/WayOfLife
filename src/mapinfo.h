@@ -10,6 +10,7 @@ public:
 	MapInfo();
 	virtual ~MapInfo();
 	std::vector<SpecialEffect> mMap;
+	std::vector<State> mCells;
 	int mX, mY;
 };
 

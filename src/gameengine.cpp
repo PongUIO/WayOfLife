@@ -29,14 +29,23 @@ GameEngine::GameEngine(Ogre::SceneManager *manager, Gorilla::Screen *screen)
 void GameEngine::setLevel(int level)
 {
 
-	MapInfo *info = mFileLoader.getMap(0);
+	MapInfo *info = mFileLoader.getMap(level);
 	mXSize = info->mX;
 	mYSize = info->mY;
 	updateDataStructures();
 	for (int i = 0; i < mXSize; i++) 
 	{
 		for (int j = 0; j < mYSize; j++) {
-			mTiles[i][j]->setSpecialEffect(info->mMap[i + j*mXSize]);
+			size_t ind = i + j * mXSize;
+			if (info->mMap.size() > ind) {
+				mTiles[i][j]->setSpecialEffect(info->mMap[ind]);
+			}
+			std::cout << ind << std::endl;
+			if (info->mCells.size() > ind) {
+				std::cout << info->mCells[ind];
+				mTiles[i][j]->setState(info->mCells[ind]);
+				mTiles[i][j]->setStoreState(info->mCells[ind]);
+			}
 		}
 	}
 	updateManualObject();
@@ -90,7 +99,7 @@ void GameEngine::addBillboardItemToWorld(BillboardItem &item, Ogre::String id)
 	node->setPosition(0, 0, 0);
 }
 
-Tile *GameEngine::getTile(int x, int y, WrapMode mode, CellState offmap)
+Tile *GameEngine::getTile(int x, int y, WrapMode mode, State offmap)
 {
 	if (x < 0 || x >= mXSize || y < 0 || y >= mYSize) {
 		return NULL;
@@ -189,7 +198,7 @@ void GameEngine::handleMouseEvent(Ogre::Vector3 vec, bool pressed, bool right, i
 			if (mTiles[x][y]->getSpecialEffect() == AIR) {
 				return;
 			}
-			CellState state = mTiles[x][y]->getState();
+			State state = mTiles[x][y]->getState();
 			mTiles[x][y]->setInheritedSpecialEffect(NONE);
 			if (state == EMPTY) {
 				mTiles[x][y]->setState(ALIVE);
